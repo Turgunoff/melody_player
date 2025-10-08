@@ -18,11 +18,13 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _logoAnimation;
   late Animation<double> _textAnimation;
 
+  String _statusText = '';
+  HomeController? _homeController;
+
   @override
   void initState() {
     super.initState();
 
-    // Logo animatsiya
     _logoController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -31,7 +33,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
     );
 
-    // Text animatsiya
     _textController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -40,7 +41,6 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _textController, curve: Curves.easeInOut),
     );
 
-    // Animatsiyalarni boshlash
     _logoController.forward();
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
@@ -48,25 +48,36 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    // Permission tekshirish va musiqalarni yuklab navigatsiya qilish
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // Permission controller yaratish
     final permissionController = Get.put(PermissionController());
     await permissionController.checkPermission();
 
-    // Agar permission bor bo'lsa, musiqalarni yuklab olishni boshlash
     if (permissionController.hasPermission) {
-      // HomeController yaratish va musiqalarni yuklab olish
-      final homeController = Get.put(HomeController());
+      // MUHIM: permanent: true qo'shamiz
+      _homeController = Get.put<HomeController>(
+        HomeController(),
+        permanent: true,
+      );
 
-      // Musiqalarni background'da yuklab olish
-      homeController.loadAllMusic();
+      if (mounted) {
+        setState(() {
+          _statusText = 'Musiqalar yuklanmoqda...';
+        });
+      }
+
+      // Musiqalarni yuklab olish
+      await _homeController!.loadAllMusic();
+
+      if (mounted) {
+        setState(() {
+          _statusText = '${_homeController!.songs.length} ta qo\'shiq topildi';
+        });
+      }
     }
 
-    // 3 soniya kutish (animatsiya uchun)
     await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
@@ -90,114 +101,106 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo animatsiya
-              AnimatedBuilder(
-                animation: _logoAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _logoAnimation.value,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedBuilder(
+                  animation: _logoAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _logoAnimation.value,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withOpacity(0.3),
+                              blurRadius: 20,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.music_note,
+                          size: 60,
+                          color: Colors.white,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.music_note,
-                        size: 60,
-                        color: Colors.white,
+                    );
+                  },
+                ),
+                const SizedBox(height: 30),
+                AnimatedBuilder(
+                  animation: _textAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _textAnimation.value,
+                      child: Transform.translate(
+                        offset: Offset(0, 20 * (1 - _textAnimation.value)),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Melody Player',
+                              style: Theme.of(context).textTheme.headlineLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Musiqangizni tinglang',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 30),
-
-              // App nomi animatsiya
-              AnimatedBuilder(
-                animation: _textAnimation,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _textAnimation.value,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - _textAnimation.value)),
+                    );
+                  },
+                ),
+                const SizedBox(height: 50),
+                AnimatedBuilder(
+                  animation: _textAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _textAnimation.value,
                       child: Column(
                         children: [
-                          Text(
-                            'Melody Player',
-                            style: Theme.of(context).textTheme.headlineLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor,
-                                ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Musiqangizni tinglang',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(color: AppTheme.textSecondaryColor),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 50),
-
-              // Loading animatsiya
-              AnimatedBuilder(
-                animation: _textAnimation,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _textAnimation.value,
-                    child: Column(
-                      children: [
-                        const SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppTheme.primaryColor,
+                          const SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppTheme.primaryColor,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        GetBuilder<HomeController>(
-                          builder: (controller) {
-                            if (controller.songs.isNotEmpty) {
-                              return Text(
-                                '${controller.songs.length} ta qo\'shiq topildi',
-                                style: TextStyle(
-                                  color: AppTheme.textSecondaryColor,
-                                  fontSize: 14,
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
+                          if (_statusText.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              _statusText,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondaryColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -6,7 +6,8 @@ class HomeController extends GetxController {
   final AudioService _audioService = AudioService();
 
   int _selectedTab = 0;
-  bool _isLoading = false; // false qilamiz chunki splash'da yuklanadi
+  bool _isLoading = false;
+  bool _isRefreshing = false; // Qo'shildi
 
   List<AudioModel> _songs = [];
   List<Map<String, dynamic>> _albums = [];
@@ -24,8 +25,6 @@ class HomeController extends GetxController {
   List<AudioModel> get songs => _songs;
   List<Map<String, dynamic>> get albums => _albums;
   List<Map<String, dynamic>> get artists => _artists;
-
-  // onInit() ni o'chirib tashlaymiz, chunki splash'dan loadAllMusic() chaqiriladi
 
   Future<void> loadAllMusic() async {
     _isLoading = true;
@@ -108,15 +107,25 @@ class HomeController extends GetxController {
   }
 
   Future<void> refresh() async {
+    if (_isRefreshing) {
+      print('⚠️ Refresh allaqachon jarayonda');
+      return;
+    }
+
+    _isRefreshing = true;
+
     try {
+      print('🔄 Yangilash boshlandi...');
       final newSongs = await _audioService.getAllSongs();
       _songs = newSongs;
       _artists = _processArtists(_songs);
       _albums = _processAlbums(_songs);
       update();
-      print('🔄 Yangilandi: ${_songs.length} qo\'shiq');
+      print('✅ Yangilandi: ${_songs.length} qo\'shiq');
     } catch (e) {
       print('❌ Yangilashda xatolik: $e');
+    } finally {
+      _isRefreshing = false;
     }
   }
 }

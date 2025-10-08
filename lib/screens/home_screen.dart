@@ -8,8 +8,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Agar controller topilmasa, xatolik berish o'rniga yaratish
+    try {
+      Get.find<HomeController>();
+    } catch (e) {
+      Get.put<HomeController>(HomeController(), permanent: true);
+    }
     return GetBuilder<HomeController>(
-      // init: HomeController(),
       builder: (controller) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.background,
@@ -208,26 +213,22 @@ class HomeScreen extends StatelessWidget {
           );
         }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            await controller.refresh();
+        // RefreshIndicator ni OLIB TASHLAYMIZ yoki NeverScrollableScrollPhysics ishlatamiz
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(), // BU MUHIM!
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          itemCount: controller.songs.length,
+          itemBuilder: (context, index) {
+            final song = controller.songs[index];
+            return _buildSongTile(
+              context,
+              song.id,
+              song.title,
+              song.artist,
+              song.durationString,
+            );
           },
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            itemCount: controller.songs.length,
-            itemBuilder: (context, index) {
-              final song = controller.songs[index];
-              return _buildSongTile(
-                context,
-                song.id,
-                song.title,
-                song.artist,
-                song.durationString,
-              );
-            },
-          ),
         );
       },
     );
