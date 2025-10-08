@@ -51,10 +51,8 @@ dependencies:
   # Icons
   flutter_svg: ^2.0.9
   shared_preferences: ^2.5.3
-  device_info_plus: ^12.1.0
-
-  # Audio query alternative (on_audio_query namespace muammosi bor)
-  flutter_media_metadata: ^1.0.0+1
+  # flutter_media_metadata: ^1.0.0+1 # Qo'shing
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

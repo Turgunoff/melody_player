@@ -1,12 +1,14 @@
 import 'package:get/get.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
+import '../models/audio_model.dart';
+import '../services/audio_service.dart';
 
 class HomeController extends GetxController {
-  int _selectedTab = 0;
-  bool _isLoading = false;
+  final AudioService _audioService = AudioService();
 
-  List<Map<String, dynamic>> _songs = [];
+  int _selectedTab = 0;
+  bool _isLoading = false; // false qilamiz chunki splash'da yuklanadi
+
+  List<AudioModel> _songs = [];
   List<Map<String, dynamic>> _albums = [];
   List<Map<String, dynamic>> _artists = [];
 
@@ -19,52 +21,85 @@ class HomeController extends GetxController {
 
   int get selectedTab => _selectedTab;
   bool get isLoading => _isLoading;
-  List<Map<String, dynamic>> get songs => _songs;
+  List<AudioModel> get songs => _songs;
   List<Map<String, dynamic>> get albums => _albums;
   List<Map<String, dynamic>> get artists => _artists;
 
-  @override
-  void onInit() {
-    super.onInit();
-    loadMockData();
-  }
+  // onInit() ni o'chirib tashlaymiz, chunki splash'dan loadAllMusic() chaqiriladi
 
-  void loadMockData() {
+  Future<void> loadAllMusic() async {
     _isLoading = true;
     update();
 
-    // Mock data
-    _songs = List.generate(
-      20,
-      (index) => {
-        'title': 'Qo\'shiq ${index + 1}',
-        'artist': 'Artist ${index + 1}',
-        'duration':
-            '${(index + 2)}:${(index * 3 + 15).toString().padLeft(2, '0')}',
-        'albumArt': null,
-      },
-    );
+    try {
+      _songs = await _audioService.getAllSongs();
+      _artists = _processArtists(_songs);
+      _albums = _processAlbums(_songs);
 
-    _albums = List.generate(
-      8,
-      (index) => {
-        'title': 'Album ${index + 1}',
-        'artist': 'Artist ${index + 1}',
-        'songCount': '${index + 8} qo\'shiq',
-      },
-    );
-
-    _artists = List.generate(
-      10,
-      (index) => {
-        'title': 'Artist ${index + 1}',
-        'artist': 'Artist ${index + 1}',
-        'songCount': '${index + 5} qo\'shiq',
-      },
-    );
+      print(
+        '✅ Yuklandi: ${_songs.length} qo\'shiq, ${_artists.length} artist, ${_albums.length} album',
+      );
+    } catch (e) {
+      print('❌ Xatolik: $e');
+    }
 
     _isLoading = false;
     update();
+  }
+
+  List<Map<String, dynamic>> _processArtists(List<AudioModel> songs) {
+    final artistMap = <String, List<AudioModel>>{};
+
+    for (var song in songs) {
+      final artist = song.artist;
+      if (!artistMap.containsKey(artist)) {
+        artistMap[artist] = [];
+      }
+      artistMap[artist]!.add(song);
+    }
+
+    final artists = artistMap.entries
+        .map(
+          (e) => {
+            'id': e.key.hashCode.toString(),
+            'title': e.key,
+            'songCount': '${e.value.length} qo\'shiq',
+          },
+        )
+        .toList();
+
+    artists.sort(
+      (a, b) => (a['title'] as String).compareTo(b['title'] as String),
+    );
+    return artists;
+  }
+
+  List<Map<String, dynamic>> _processAlbums(List<AudioModel> songs) {
+    final albumMap = <String, List<AudioModel>>{};
+
+    for (var song in songs) {
+      final album = song.album ?? 'Noma\'lum album';
+      if (!albumMap.containsKey(album)) {
+        albumMap[album] = [];
+      }
+      albumMap[album]!.add(song);
+    }
+
+    final albums = albumMap.entries
+        .map(
+          (e) => {
+            'id': e.key.hashCode.toString(),
+            'title': e.key,
+            'artist': e.value.isNotEmpty ? e.value.first.artist : 'Noma\'lum',
+            'songCount': '${e.value.length} qo\'shiq',
+          },
+        )
+        .toList();
+
+    albums.sort(
+      (a, b) => (a['title'] as String).compareTo(b['title'] as String),
+    );
+    return albums;
   }
 
   void changeTab(int index) {
@@ -73,23 +108,15 @@ class HomeController extends GetxController {
   }
 
   Future<void> refresh() async {
-    await Future.delayed(const Duration(seconds: 1));
-    loadMockData();
-  }
-
-  Future<void> pickMusicFiles() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.audio,
-        allowMultiple: true,
-      );
-
-      if (result != null) {
-        // Handle picked files
-        print('Picked ${result.files.length} files');
-      }
+      final newSongs = await _audioService.getAllSongs();
+      _songs = newSongs;
+      _artists = _processArtists(_songs);
+      _albums = _processAlbums(_songs);
+      update();
+      print('🔄 Yangilandi: ${_songs.length} qo\'shiq');
     } catch (e) {
-      print('Error picking files: $e');
+      print('❌ Yangilashda xatolik: $e');
     }
   }
 }

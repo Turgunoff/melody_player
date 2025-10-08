@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'screens/permission_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/main_screen.dart';
 import 'utils/app_theme.dart';
@@ -18,7 +19,10 @@ class MelodyPlayerApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
-      getPages: [GetPage(name: '/main', page: () => const MainScreen())],
+      getPages: [
+        GetPage(name: '/main', page: () => const MainScreen()),
+        GetPage(name: '/permission', page: () => const PermissionScreen()),
+      ],
     );
   }
 }

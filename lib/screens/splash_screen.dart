@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/permission_controller.dart';
+import '../controllers/home_controller.dart';
 import '../utils/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -41,13 +43,39 @@ class _SplashScreenState extends State<SplashScreen>
     // Animatsiyalarni boshlash
     _logoController.forward();
     Future.delayed(const Duration(milliseconds: 500), () {
-      _textController.forward();
+      if (mounted) {
+        _textController.forward();
+      }
     });
 
-    // 3 soniyadan keyin main screen'ga o'tish
-    Future.delayed(const Duration(seconds: 3), () {
-      Get.offNamed('/main');
-    });
+    // Permission tekshirish va musiqalarni yuklab navigatsiya qilish
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // Permission controller yaratish
+    final permissionController = Get.put(PermissionController());
+    await permissionController.checkPermission();
+
+    // Agar permission bor bo'lsa, musiqalarni yuklab olishni boshlash
+    if (permissionController.hasPermission) {
+      // HomeController yaratish va musiqalarni yuklab olish
+      final homeController = Get.put(HomeController());
+
+      // Musiqalarni background'da yuklab olish
+      homeController.loadAllMusic();
+    }
+
+    // 3 soniya kutish (animatsiya uchun)
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (mounted) {
+      if (permissionController.hasPermission) {
+        Get.offNamed('/main');
+      } else {
+        Get.offNamed('/permission');
+      }
+    }
   }
 
   @override
@@ -137,15 +165,34 @@ class _SplashScreenState extends State<SplashScreen>
                 builder: (context, child) {
                   return Opacity(
                     opacity: _textAnimation.value,
-                    child: const SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.primaryColor,
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppTheme.primaryColor,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        GetBuilder<HomeController>(
+                          builder: (controller) {
+                            if (controller.songs.isNotEmpty) {
+                              return Text(
+                                '${controller.songs.length} ta qo\'shiq topildi',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondaryColor,
+                                  fontSize: 14,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ],
                     ),
                   );
                 },
