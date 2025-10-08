@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+// import 'package:on_audio_query/on_audio_query.dart'; // Namespace muammosi
 import '../controllers/home_controller.dart';
 import '../utils/app_theme.dart';
 
@@ -153,89 +154,13 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildSongsList(BuildContext context) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      itemCount: 20,
-      itemBuilder: (context, index) {
-        return _buildSongTile(
-          context,
-          'Qo\'shiq ${index + 1}',
-          'Artist ${index + 1}',
-          '${(index + 2)}:${(index * 3 + 15).toString().padLeft(2, '0')}',
-        );
-      },
-    );
-  }
-
-  Widget _buildArtistsList(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return _buildArtistCard(
-          context,
-          'Artist ${index + 1}',
-          '${index + 5} qo\'shiq',
-        );
-      },
-    );
-  }
-
-  Widget _buildAlbumsList(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: 8,
-      itemBuilder: (context, index) {
-        return _buildAlbumCard(
-          context,
-          'Album ${index + 1}',
-          'Artist ${index + 1}',
-          '${index + 8} qo\'shiq',
-        );
-      },
-    );
-  }
-
-  Widget _buildPlaylistsList(BuildContext context) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      itemCount: 5,
-      itemBuilder: (context, index) {
-        return _buildPlaylistTile(
-          context,
-          'Pleylist ${index + 1}',
-          '${index + 3} qo\'shiq',
-        );
-      },
-    );
-  }
-
+  // _buildSongTile ni yangilang (album art uchun):
   Widget _buildSongTile(
     BuildContext context,
     String title,
     String artist,
     String duration,
+    String? albumArt,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -337,6 +262,288 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+
+  // _buildArtistsList ni yangilang:
+  Widget _buildArtistsList(BuildContext context) {
+    return GetBuilder<HomeController>(
+      builder: (controller) {
+        if (controller.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (controller.artists.isEmpty) {
+          return const Center(child: Text('Artistlar topilmadi'));
+        }
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.85,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: controller.artists.length,
+          itemBuilder: (context, index) {
+            final artist = controller.artists[index];
+            return _buildArtistCard(
+              context,
+              artist['title'],
+              artist['songCount'],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // _buildSongsList ni almashtiring:
+  Widget _buildSongsList(BuildContext context) {
+    return GetBuilder<HomeController>(
+      builder: (controller) {
+        if (controller.isLoading) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (controller.songs.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.music_note_rounded,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Musiqa topilmadi',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Qurilmangizda musiqa fayllari yo\'q',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: controller.refresh,
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            itemCount: controller.songs.length,
+            itemBuilder: (context, index) {
+              final song = controller.songs[index];
+              return _buildSongTile(
+                context,
+                song['title'],
+                song['artist'],
+                song['duration'],
+                song['albumArt'],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  // Widget _buildArtistsList(BuildContext context) {
+  //   return GridView.builder(
+  //     shrinkWrap: true,
+  //     physics: const NeverScrollableScrollPhysics(),
+  //     padding: const EdgeInsets.all(20),
+  //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //       crossAxisCount: 2,
+  //       childAspectRatio: 0.85,
+  //       crossAxisSpacing: 16,
+  //       mainAxisSpacing: 16,
+  //     ),
+  //     itemCount: 10,
+  //     itemBuilder: (context, index) {
+  //       return _buildArtistCard(
+  //         context,
+  //         'Artist ${index + 1}',
+  //         '${index + 5} qo\'shiq',
+  //       );
+  //     },
+  //   );
+  // }
+
+  Widget _buildAlbumsList(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: 8,
+      itemBuilder: (context, index) {
+        return _buildAlbumCard(
+          context,
+          'Album ${index + 1}',
+          'Artist ${index + 1}',
+          '${index + 8} qo\'shiq',
+        );
+      },
+    );
+  }
+
+  Widget _buildPlaylistsList(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return _buildPlaylistTile(
+          context,
+          'Pleylist ${index + 1}',
+          '${index + 3} qo\'shiq',
+        );
+      },
+    );
+  }
+
+  // Widget _buildSongTile(
+  //   BuildContext context,
+  //   String title,
+  //   String artist,
+  //   String duration,
+  // ) {
+  //   return Container(
+  //     margin: const EdgeInsets.only(bottom: 12),
+  //     decoration: BoxDecoration(
+  //       color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+  //       borderRadius: BorderRadius.circular(16),
+  //     ),
+  //     child: Material(
+  //       color: Colors.transparent,
+  //       child: InkWell(
+  //         onTap: () {
+  //           // Play song
+  //         },
+  //         borderRadius: BorderRadius.circular(16),
+  //         child: Padding(
+  //           padding: const EdgeInsets.all(12),
+  //           child: Row(
+  //             children: [
+  //               // Album Art
+  //               Container(
+  //                 width: 56,
+  //                 height: 56,
+  //                 decoration: BoxDecoration(
+  //                   gradient: AppTheme.primaryGradient,
+  //                   borderRadius: BorderRadius.circular(12),
+  //                   boxShadow: [
+  //                     BoxShadow(
+  //                       color: Theme.of(
+  //                         context,
+  //                       ).colorScheme.primary.withOpacity(0.3),
+  //                       blurRadius: 8,
+  //                       offset: const Offset(0, 4),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 child: const Icon(
+  //                   Icons.music_note_rounded,
+  //                   color: Colors.white,
+  //                   size: 28,
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 16),
+  //               // Song Info
+  //               Expanded(
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Text(
+  //                       title,
+  //                       style: const TextStyle(
+  //                         fontWeight: FontWeight.w600,
+  //                         fontSize: 16,
+  //                       ),
+  //                       maxLines: 1,
+  //                       overflow: TextOverflow.ellipsis,
+  //                     ),
+  //                     const SizedBox(height: 4),
+  //                     Text(
+  //                       artist,
+  //                       style: TextStyle(
+  //                         color: Theme.of(
+  //                           context,
+  //                         ).colorScheme.onSurface.withOpacity(0.6),
+  //                         fontSize: 14,
+  //                       ),
+  //                       maxLines: 1,
+  //                       overflow: TextOverflow.ellipsis,
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //               // Duration and Menu
+  //               Text(
+  //                 duration,
+  //                 style: TextStyle(
+  //                   color: Theme.of(
+  //                     context,
+  //                   ).colorScheme.onSurface.withOpacity(0.6),
+  //                   fontSize: 13,
+  //                   fontWeight: FontWeight.w500,
+  //                 ),
+  //               ),
+  //               IconButton(
+  //                 onPressed: () {
+  //                   // Menu functionality
+  //                 },
+  //                 icon: Icon(
+  //                   Icons.more_vert_rounded,
+  //                   color: Theme.of(
+  //                     context,
+  //                   ).colorScheme.onSurface.withOpacity(0.6),
+  //                 ),
+  //                 iconSize: 20,
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildArtistCard(BuildContext context, String name, String songCount) {
     return Container(
