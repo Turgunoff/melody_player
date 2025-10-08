@@ -281,7 +281,9 @@ class NowPlayingScreen extends StatelessWidget {
             onPressed: controller.toggleShuffle,
             icon: Icon(
               Icons.shuffle,
-              color: Colors.white.withOpacity(0.7),
+              color: controller.isShuffled
+                  ? AppTheme.primaryColor
+                  : Colors.white.withOpacity(0.7),
               size: 24,
             ),
           ),
@@ -333,14 +335,14 @@ class NowPlayingScreen extends StatelessWidget {
             icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
           ),
 
-          // Queue
+          // Repeat
           IconButton(
-            onPressed: () {
-              // TODO: Show queue
-            },
+            onPressed: controller.toggleRepeat,
             icon: Icon(
-              Icons.queue_music,
-              color: Colors.white.withOpacity(0.7),
+              controller.isRepeating ? Icons.repeat : Icons.repeat_outlined,
+              color: controller.isRepeating
+                  ? AppTheme.primaryColor
+                  : Colors.white.withOpacity(0.7),
               size: 24,
             ),
           ),

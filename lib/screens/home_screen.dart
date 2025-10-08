@@ -249,7 +249,8 @@ class HomeScreen extends StatelessWidget {
               context,
               listen: false,
             );
-            await audioController.playSong(song);
+            final homeController = Provider.of<HomeController>(context, listen: false);
+            await audioController.playSong(song, playlist: homeController.songs);
             Navigator.of(context).pushNamed('/now-playing');
           },
           borderRadius: BorderRadius.circular(16),

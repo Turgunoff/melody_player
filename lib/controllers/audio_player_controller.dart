@@ -52,11 +52,18 @@ class AudioPlayerController extends ChangeNotifier {
     });
   }
 
-  Future<void> playSong(AudioModel song) async {
+  Future<void> playSong(AudioModel song, {List<AudioModel>? playlist}) async {
     try {
       _currentSong = song;
       _isLoading = true;
       notifyListeners();
+
+      // Playlist qo'shish
+      if (playlist != null) {
+        _playlist = playlist;
+        _currentIndex = playlist.indexWhere((s) => s.id == song.id);
+        if (_currentIndex == -1) _currentIndex = 0;
+      }
 
       await _audioPlayer.setFilePath(song.path);
       await _audioPlayer.play();
@@ -88,23 +95,60 @@ class AudioPlayerController extends ChangeNotifier {
   }
 
   Future<void> nextSong() async {
-    // TODO: Implement next song logic
-    print('⏭️ Next song');
+    if (_playlist.isEmpty) {
+      print('❌ Playlist bo\'sh');
+      return;
+    }
+
+    if (_isShuffled) {
+      // Random song
+      final random = DateTime.now().millisecondsSinceEpoch % _playlist.length;
+      _currentIndex = random;
+    } else {
+      // Keyingi qo'shiq
+      _currentIndex = (_currentIndex + 1) % _playlist.length;
+    }
+
+    await _playCurrentSong();
+    print('⏭️ Next song: ${_currentSong?.title}');
   }
 
   Future<void> previousSong() async {
-    // TODO: Implement previous song logic
-    print('⏮️ Previous song');
+    if (_playlist.isEmpty) {
+      print('❌ Playlist bo\'sh');
+      return;
+    }
+
+    if (_isShuffled) {
+      // Random song
+      final random = DateTime.now().millisecondsSinceEpoch % _playlist.length;
+      _currentIndex = random;
+    } else {
+      // Oldingi qo'shiq
+      _currentIndex = (_currentIndex - 1 + _playlist.length) % _playlist.length;
+    }
+
+    await _playCurrentSong();
+    print('⏮️ Previous song: ${_currentSong?.title}');
+  }
+
+  Future<void> _playCurrentSong() async {
+    if (_currentIndex >= 0 && _currentIndex < _playlist.length) {
+      final song = _playlist[_currentIndex];
+      await playSong(song);
+    }
   }
 
   void toggleShuffle() {
-    // TODO: Implement shuffle logic
-    print('🔀 Toggle shuffle');
+    _isShuffled = !_isShuffled;
+    notifyListeners();
+    print('🔀 Shuffle: ${_isShuffled ? "ON" : "OFF"}');
   }
 
   void toggleRepeat() {
-    // TODO: Implement repeat logic
-    print('🔁 Toggle repeat');
+    _isRepeating = !_isRepeating;
+    notifyListeners();
+    print('🔁 Repeat: ${_isRepeating ? "ON" : "OFF"}');
   }
 
   @override
