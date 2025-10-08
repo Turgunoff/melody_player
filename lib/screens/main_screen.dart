@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/main_controller.dart';
+import '../controllers/audio_player_controller.dart';
 import '../widgets/mini_player.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
@@ -12,11 +13,11 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MainController>(
-      builder: (context, controller, child) {
+    return Consumer2<MainController, AudioPlayerController>(
+      builder: (context, mainController, audioController, child) {
         return Scaffold(
           body: IndexedStack(
-            index: controller.currentIndex,
+            index: mainController.currentIndex,
             children: const [
               HomeScreen(),
               LibraryScreen(),
@@ -35,8 +36,8 @@ class MainScreen extends StatelessWidget {
               ],
             ),
             child: BottomNavigationBar(
-              currentIndex: controller.currentIndex,
-              onTap: (index) => controller.changeTab(index),
+              currentIndex: mainController.currentIndex,
+              onTap: (index) => mainController.changeTab(index),
               type: BottomNavigationBarType.fixed,
               backgroundColor: Theme.of(context).colorScheme.surface,
               selectedItemColor: Theme.of(context).colorScheme.primary,
@@ -76,7 +77,9 @@ class MainScreen extends StatelessWidget {
             ),
           ),
           // Mini player
-          bottomSheet: controller.isPlaying ? const MiniPlayer() : null,
+          bottomSheet: audioController.currentSong != null
+              ? const MiniPlayer()
+              : null,
         );
       },
     );

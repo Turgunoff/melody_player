@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/home_controller.dart';
+import '../controllers/audio_player_controller.dart';
+import '../models/audio_model.dart';
 import '../utils/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -226,24 +228,12 @@ class HomeScreen extends StatelessWidget {
       itemCount: controller.songs.length,
       itemBuilder: (context, index) {
         final song = controller.songs[index];
-        return _buildSongTile(
-          context,
-          song.id,
-          song.title,
-          song.artist,
-          song.durationString,
-        );
+        return _buildSongTile(context, song);
       },
     );
   }
 
-  Widget _buildSongTile(
-    BuildContext context,
-    String songId,
-    String title,
-    String artist,
-    String duration,
-  ) {
+  Widget _buildSongTile(BuildContext context, AudioModel song) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -253,8 +243,14 @@ class HomeScreen extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
+          onTap: () async {
             // Play song
+            final audioController = Provider.of<AudioPlayerController>(
+              context,
+              listen: false,
+            );
+            await audioController.playSong(song);
+            Navigator.of(context).pushNamed('/now-playing');
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
@@ -285,7 +281,7 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        song.title,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -295,7 +291,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        artist,
+                        song.artist,
                         style: TextStyle(
                           color: Theme.of(
                             context,
@@ -310,7 +306,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 // Duration and Menu
                 Text(
-                  duration,
+                  song.durationString,
                   style: TextStyle(
                     color: Theme.of(
                       context,
