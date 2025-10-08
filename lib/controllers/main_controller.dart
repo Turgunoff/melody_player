@@ -1,6 +1,6 @@
-import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 
-class MainController extends GetxController {
+class MainController extends ChangeNotifier {
   int _currentIndex = 0;
   bool _isPlaying = false;
 
@@ -9,11 +9,11 @@ class MainController extends GetxController {
 
   void changeTab(int index) {
     _currentIndex = index;
-    update();
+    notifyListeners();
   }
 
   void setPlaying(bool playing) {
     _isPlaying = playing;
-    update();
+    notifyListeners();
   }
 }

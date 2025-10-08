@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import '../controllers/permission_controller.dart';
 import '../controllers/home_controller.dart';
 import '../utils/app_theme.dart';
@@ -19,7 +19,6 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _textAnimation;
 
   String _statusText = '';
-  HomeController? _homeController;
 
   @override
   void initState() {
@@ -48,32 +47,47 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    _initializeApp();
+    // Build tugagandan keyin initialize qilamiz
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeApp();
+    });
   }
 
   Future<void> _initializeApp() async {
-    final permissionController = Get.put(PermissionController());
+    if (mounted) {
+      setState(() {
+        _statusText = 'Permission tekshirilmoqda...';
+      });
+    }
+
+    // Permission tekshirish
+    final permissionController = Provider.of<PermissionController>(
+      context,
+      listen: false,
+    );
     await permissionController.checkPermission();
 
-    if (permissionController.hasPermission) {
-      // MUHIM: permanent: true qo'shamiz
-      _homeController = Get.put<HomeController>(
-        HomeController(),
-        permanent: true,
-      );
-
-      if (mounted) {
+    if (mounted) {
+      if (permissionController.hasPermission) {
         setState(() {
           _statusText = 'Musiqalar yuklanmoqda...';
         });
-      }
 
-      // Musiqalarni yuklab olish
-      await _homeController!.loadAllMusic();
+        // Musiqalarni yuklab olish
+        final homeController = Provider.of<HomeController>(
+          context,
+          listen: false,
+        );
+        homeController.initialize();
 
-      if (mounted) {
+        if (mounted) {
+          setState(() {
+            _statusText = '${homeController.songs.length} ta qo\'shiq topildi';
+          });
+        }
+      } else {
         setState(() {
-          _statusText = '${_homeController!.songs.length} ta qo\'shiq topildi';
+          _statusText = 'Permission kerak';
         });
       }
     }
@@ -82,11 +96,106 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (mounted) {
       if (permissionController.hasPermission) {
-        Get.offNamed('/main');
+        Navigator.of(context).pushReplacementNamed('/main');
       } else {
-        Get.offNamed('/permission');
+        // Dialog bilan permission so'rash
+        _showPermissionDialog(context, permissionController);
       }
     }
+  }
+
+  Future<void> _showPermissionDialog(
+    BuildContext context,
+    PermissionController controller,
+  ) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.folder_open,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Permission Kerak',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Musiqalarni o\'qish uchun storage permission kerak. Bu permission faqat musiqalarni topish va o\'ynatish uchun ishlatiladi.',
+            style: TextStyle(color: AppTheme.textSecondaryColor, height: 1.5),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final granted = await controller.requestPermission();
+                if (granted) {
+                  Navigator.of(context).pushReplacementNamed('/main');
+                } else {
+                  // Permission rad etildi, ilovani yopish
+                  Navigator.of(context).pop();
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text(
+                'Permission Berish',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Ilovani yopish
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.textSecondaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Bekor qilish'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import '../controllers/main_controller.dart';
 import '../utils/app_theme.dart';
 
@@ -8,8 +8,8 @@ class MiniPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MainController>(
-      builder: (controller) {
+    return Consumer<MainController>(
+      builder: (context, controller, child) {
         return Container(
           height: 80,
           decoration: BoxDecoration(

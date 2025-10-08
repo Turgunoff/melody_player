@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import '../controllers/home_controller.dart';
 import '../utils/app_theme.dart';
 
@@ -8,14 +8,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Agar controller topilmasa, xatolik berish o'rniga yaratish
-    try {
-      Get.find<HomeController>();
-    } catch (e) {
-      Get.put<HomeController>(HomeController(), permanent: true);
-    }
-    return GetBuilder<HomeController>(
-      builder: (controller) {
+    return Consumer<HomeController>(
+      builder: (context, controller, child) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.background,
           body: CustomScrollView(
@@ -76,7 +70,13 @@ class HomeScreen extends StatelessWidget {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () => controller.changeTab(index),
+                              onTap: () {
+                                // Tab o'zgartirish
+                                controller.changeTab(index);
+                                print(
+                                  '✅ Tab o\'zgartirildi: ${controller.tabs[index]}',
+                                );
+                              },
                               borderRadius: BorderRadius.circular(25),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -134,7 +134,11 @@ class HomeScreen extends StatelessWidget {
 
               // Content
               SliverToBoxAdapter(
-                child: _buildContent(controller.selectedTab, context),
+                child: _buildContent(
+                  controller.selectedTab,
+                  context,
+                  controller,
+                ),
               ),
             ],
           ),
@@ -143,92 +147,91 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(int selectedTab, BuildContext context) {
+  Widget _buildContent(
+    int selectedTab,
+    BuildContext context,
+    HomeController controller,
+  ) {
     switch (selectedTab) {
       case 0:
-        return _buildSongsList(context);
+        return _buildSongsList(context, controller);
       case 1:
-        return _buildArtistsList(context);
+        return _buildArtistsList(context, controller);
       case 2:
-        return _buildAlbumsList(context);
+        return _buildAlbumsList(context, controller);
       case 3:
-        return _buildPlaylistsList(context);
+        return _buildPlaylistsList(context, controller);
       default:
-        return _buildSongsList(context);
+        return _buildSongsList(context, controller);
     }
   }
 
   // ============ BARCHA QO'SHIQLAR ============
-  Widget _buildSongsList(BuildContext context) {
-    return GetBuilder<HomeController>(
-      builder: (controller) {
-        if (controller.isLoading) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+  Widget _buildSongsList(BuildContext context, HomeController controller) {
+    if (controller.isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-        if (controller.songs.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.music_note_rounded,
-                      size: 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Musiqa topilmadi',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Qurilmangizda musiqa fayllari yo\'q',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+    if (controller.songs.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.music_note_rounded,
+                  size: 50,
+                  color: Colors.white,
+                ),
               ),
-            ),
-          );
-        }
+              const SizedBox(height: 24),
+              const Text(
+                'Musiqa topilmadi',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Qurilmangizda musiqa fayllari yo\'q',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-        // RefreshIndicator ni OLIB TASHLAYMIZ yoki NeverScrollableScrollPhysics ishlatamiz
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(), // BU MUHIM!
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          itemCount: controller.songs.length,
-          itemBuilder: (context, index) {
-            final song = controller.songs[index];
-            return _buildSongTile(
-              context,
-              song.id,
-              song.title,
-              song.artist,
-              song.durationString,
-            );
-          },
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      itemCount: controller.songs.length,
+      itemBuilder: (context, index) {
+        final song = controller.songs[index];
+        return _buildSongTile(
+          context,
+          song.id,
+          song.title,
+          song.artist,
+          song.durationString,
         );
       },
     );
@@ -337,69 +340,61 @@ class HomeScreen extends StatelessWidget {
   }
 
   // ============ ARTISTLAR ============
-  Widget _buildArtistsList(BuildContext context) {
-    return GetBuilder<HomeController>(
-      builder: (controller) {
-        if (controller.isLoading) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+  Widget _buildArtistsList(BuildContext context, HomeController controller) {
+    if (controller.isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-        if (controller.artists.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      size: 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Artistlar topilmadi',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                ],
+    if (controller.artists.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  size: 50,
+                  color: Colors.white,
+                ),
               ),
-            ),
-          );
-        }
-
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.85,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+              const SizedBox(height: 24),
+              const Text(
+                'Artistlar topilmadi',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-          itemCount: controller.artists.length,
-          itemBuilder: (context, index) {
-            final artist = controller.artists[index];
-            return _buildArtistCard(
-              context,
-              artist['title'],
-              artist['songCount'],
-            );
-          },
-        );
+        ),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.85,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: controller.artists.length,
+      itemBuilder: (context, index) {
+        final artist = controller.artists[index];
+        return _buildArtistCard(context, artist['title'], artist['songCount']);
       },
     );
   }
@@ -474,69 +469,65 @@ class HomeScreen extends StatelessWidget {
   }
 
   // ============ ALBUMLAR ============
-  Widget _buildAlbumsList(BuildContext context) {
-    return GetBuilder<HomeController>(
-      builder: (controller) {
-        if (controller.isLoading) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+  Widget _buildAlbumsList(BuildContext context, HomeController controller) {
+    if (controller.isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-        if (controller.albums.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.album_rounded,
-                      size: 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Albumlar topilmadi',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                ],
+    if (controller.albums.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.album_rounded,
+                  size: 50,
+                  color: Colors.white,
+                ),
               ),
-            ),
-          );
-        }
-
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.75,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+              const SizedBox(height: 24),
+              const Text(
+                'Albumlar topilmadi',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-          itemCount: controller.albums.length,
-          itemBuilder: (context, index) {
-            final album = controller.albums[index];
-            return _buildAlbumCard(
-              context,
-              album['title'],
-              album['artist'],
-              album['songCount'],
-            );
-          },
+        ),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: controller.albums.length,
+      itemBuilder: (context, index) {
+        final album = controller.albums[index];
+        return _buildAlbumCard(
+          context,
+          album['title'],
+          album['artist'],
+          album['songCount'],
         );
       },
     );
@@ -630,7 +621,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   // ============ PLEYLISTLAR ============
-  Widget _buildPlaylistsList(BuildContext context) {
+  Widget _buildPlaylistsList(BuildContext context, HomeController controller) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),

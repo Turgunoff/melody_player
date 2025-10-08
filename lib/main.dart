@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'screens/permission_screen.dart';
+import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/main_screen.dart';
 import 'utils/app_theme.dart';
+import 'controllers/home_controller.dart';
+import 'controllers/main_controller.dart';
+import 'controllers/permission_controller.dart';
 
 void main() {
   runApp(const MelodyPlayerApp());
@@ -14,15 +16,19 @@ class MelodyPlayerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Melody Player',
-      theme: AppTheme.darkTheme,
-      debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
-      getPages: [
-        GetPage(name: '/main', page: () => const MainScreen()),
-        GetPage(name: '/permission', page: () => const PermissionScreen()),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PermissionController()),
+        ChangeNotifierProvider(create: (_) => MainController()),
+        ChangeNotifierProvider(create: (_) => HomeController()),
       ],
+      child: MaterialApp(
+        title: 'Melody Player',
+        theme: AppTheme.darkTheme,
+        debugShowCheckedModeBanner: false,
+        home: const SplashScreen(),
+        routes: {'/main': (context) => const MainScreen()},
+      ),
     );
   }
 }

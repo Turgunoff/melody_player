@@ -1,8 +1,8 @@
-import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import '../models/audio_model.dart';
 import '../services/audio_service.dart';
 
-class HomeController extends GetxController {
+class HomeController extends ChangeNotifier {
   final AudioService _audioService = AudioService();
 
   int _selectedTab = 0;
@@ -26,9 +26,18 @@ class HomeController extends GetxController {
   List<Map<String, dynamic>> get albums => _albums;
   List<Map<String, dynamic>> get artists => _artists;
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void initialize() {
+    loadAllMusic();
+  }
+
   Future<void> loadAllMusic() async {
     _isLoading = true;
-    update();
+    notifyListeners();
 
     try {
       _songs = await _audioService.getAllSongs();
@@ -43,7 +52,7 @@ class HomeController extends GetxController {
     }
 
     _isLoading = false;
-    update();
+    notifyListeners();
   }
 
   List<Map<String, dynamic>> _processArtists(List<AudioModel> songs) {
@@ -103,7 +112,7 @@ class HomeController extends GetxController {
 
   void changeTab(int index) {
     _selectedTab = index;
-    update();
+    notifyListeners();
   }
 
   Future<void> refresh() async {
@@ -120,7 +129,7 @@ class HomeController extends GetxController {
       _songs = newSongs;
       _artists = _processArtists(_songs);
       _albums = _processAlbums(_songs);
-      update();
+      notifyListeners();
       print('✅ Yangilandi: ${_songs.length} qo\'shiq');
     } catch (e) {
       print('❌ Yangilashda xatolik: $e');

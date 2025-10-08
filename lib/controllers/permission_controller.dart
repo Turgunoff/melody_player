@@ -1,84 +1,80 @@
-import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart'
+    as permission_handler;
 
-class PermissionController extends GetxController {
+class PermissionController extends ChangeNotifier {
   bool _hasPermission = false;
-  bool get hasPermission => _hasPermission;
+  bool _isChecking = false;
+  String _statusMessage = '';
 
-  @override
-  void onInit() {
-    super.onInit();
-    checkPermission();
-  }
+  bool get hasPermission => _hasPermission;
+  bool get isChecking => _isChecking;
+  String get statusMessage => _statusMessage;
 
   Future<void> checkPermission() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedPermission = prefs.getBool('audio_permission') ?? false;
+    _isChecking = true;
+    _statusMessage = 'Permission tekshirilmoqda...';
+    notifyListeners();
 
-    if (savedPermission) {
-      final hasActualPermission = await _checkActualPermission();
-      if (hasActualPermission) {
+    try {
+      // Storage permission tekshirish
+      final storageStatus = await permission_handler.Permission.storage.status;
+
+      if (storageStatus.isGranted) {
         _hasPermission = true;
-        update();
-        return;
+        _statusMessage = 'Permission mavjud';
+        print('✅ Storage permission mavjud');
+      } else {
+        _hasPermission = false;
+        _statusMessage = 'Permission kerak';
+        print('❌ Storage permission yo\'q');
       }
+    } catch (e) {
+      _hasPermission = false;
+      _statusMessage = 'Permission tekshirishda xatolik: $e';
+      print('❌ Permission tekshirishda xatolik: $e');
     }
 
-    final hasActualPermission = await _checkActualPermission();
-    if (hasActualPermission) {
-      _hasPermission = true;
-      await prefs.setBool('audio_permission', true);
-      update();
-    }
-  }
-
-  Future<bool> _checkActualPermission() async {
-    if (!Platform.isAndroid) return false;
-
-    // Avval audio permission tekshiramiz (Android 13+)
-    final audioStatus = await Permission.audio.status;
-    if (audioStatus.isGranted) return true;
-
-    // Agar audio yo'q bo'lsa storage tekshiramiz (Android 12-)
-    final storageStatus = await Permission.storage.status;
-    if (storageStatus.isGranted) return true;
-
-    return false;
+    _isChecking = false;
+    notifyListeners();
   }
 
   Future<bool> requestPermission() async {
-    if (!Platform.isAndroid) return false;
+    _isChecking = true;
+    _statusMessage = 'Permission so\'ralmoqda...';
+    notifyListeners();
 
-    // Avval audio permission so'raymiz
-    PermissionStatus audioStatus = await Permission.audio.request();
+    try {
+      final status = await permission_handler.Permission.storage.request();
 
-    // Agar audio granted bo'lsa
-    if (audioStatus.isGranted) {
-      _hasPermission = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('audio_permission', true);
-      update();
-      return true;
+      if (status.isGranted) {
+        _hasPermission = true;
+        _statusMessage = 'Permission berildi';
+        print('✅ Storage permission berildi');
+        return true;
+      } else {
+        _hasPermission = false;
+        _statusMessage = 'Permission rad etildi';
+        print('❌ Storage permission rad etildi');
+        return false;
+      }
+    } catch (e) {
+      _hasPermission = false;
+      _statusMessage = 'Permission so\'rashda xatolik: $e';
+      print('❌ Permission so\'rashda xatolik: $e');
+      return false;
+    } finally {
+      _isChecking = false;
+      notifyListeners();
     }
+  }
 
-    // Agar audio denied bo'lsa, storage sinab ko'ramiz
-    PermissionStatus storageStatus = await Permission.storage.request();
-
-    if (storageStatus.isGranted) {
-      _hasPermission = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('audio_permission', true);
-      update();
-      return true;
+  Future<void> openAppSettings() async {
+    try {
+      await permission_handler.openAppSettings();
+      print('📱 App settings ochildi');
+    } catch (e) {
+      print('❌ App settings ochishda xatolik: $e');
     }
-
-    // Agar permanently denied bo'lsa
-    if (audioStatus.isPermanentlyDenied || storageStatus.isPermanentlyDenied) {
-      await openAppSettings();
-    }
-
-    return false;
   }
 }

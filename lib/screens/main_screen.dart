@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import '../controllers/main_controller.dart';
 import '../widgets/mini_player.dart';
 import 'home_screen.dart';
@@ -12,9 +12,8 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MainController>(
-      init: MainController(),
-      builder: (controller) {
+    return Consumer<MainController>(
+      builder: (context, controller, child) {
         return Scaffold(
           body: IndexedStack(
             index: controller.currentIndex,
@@ -37,7 +36,7 @@ class MainScreen extends StatelessWidget {
             ),
             child: BottomNavigationBar(
               currentIndex: controller.currentIndex,
-              onTap: controller.changeTab,
+              onTap: (index) => controller.changeTab(index),
               type: BottomNavigationBarType.fixed,
               backgroundColor: Theme.of(context).colorScheme.surface,
               selectedItemColor: Theme.of(context).colorScheme.primary,
