@@ -17,10 +17,14 @@ class AudioPlayerController extends ChangeNotifier {
 
   // Getters
   AudioModel? get currentSong => _currentSong;
+  List<AudioModel> get playlist => _playlist;
+  int get currentIndex => _currentIndex;
   Duration get duration => _duration;
   Duration get position => _position;
   bool get isPlaying => _isPlaying;
   bool get isLoading => _isLoading;
+  bool get isShuffled => _isShuffled;
+  bool get isRepeating => _isRepeating;
 
   double get progress => _duration.inMilliseconds > 0
       ? _position.inMilliseconds / _duration.inMilliseconds
