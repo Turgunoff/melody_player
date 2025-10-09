@@ -75,7 +75,7 @@ class FullPlayerSheet extends StatelessWidget {
             ),
           ),
           const Text(
-            'Now Playing',
+            'Hozir O\'ynatilmoqda',
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -153,7 +153,7 @@ class FullPlayerSheet extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            controller.currentSong?.title ?? 'Unknown',
+            controller.currentSong?.title ?? 'Noma\'lum',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -165,7 +165,7 @@ class FullPlayerSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            controller.currentSong?.artist ?? 'Unknown Artist',
+            controller.currentSong?.artist ?? 'Noma\'lum Artist',
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 16,

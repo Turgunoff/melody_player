@@ -84,7 +84,7 @@ class NowPlayingScreen extends StatelessWidget {
             ),
           ),
           const Text(
-            'Now Playing',
+            'Hozir O\'ynatilmoqda',
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,
