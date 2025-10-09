@@ -32,7 +32,10 @@ class HomeController extends ChangeNotifier {
   }
 
   void initialize() {
-    loadAllMusic();
+    if (_songs.isEmpty) {
+      // Faqat bo'sh bo'lsa yuklash
+      loadAllMusic();
+    }
   }
 
   Future<void> loadAllMusic() async {

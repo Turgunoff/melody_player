@@ -4,6 +4,7 @@ import '../controllers/home_controller.dart';
 import '../controllers/audio_player_controller.dart';
 import '../models/audio_model.dart';
 import '../utils/app_theme.dart';
+import '../widgets/full_player_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -46,8 +47,14 @@ class HomeScreen extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () {
-                      // Menu functionality
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const NowPlayingScreen(),
+                      );
                     },
+
                     icon: const Icon(Icons.more_vert, color: Colors.white),
                   ),
                   const SizedBox(width: 8),

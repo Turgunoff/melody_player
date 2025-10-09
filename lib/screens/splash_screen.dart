@@ -160,9 +160,30 @@ class _SplashScreenState extends State<SplashScreen>
 
                 // Context hali active ekanligini tekshiring
                 if (context.mounted && granted) {
-                  // mounted ishlatamiz
-                  // Main screen'ga o'ting
-                  Navigator.of(context).pushReplacementNamed('/main');
+                  // QUSHISH: Musiqalarni yuklash
+                  setState(() {
+                    _statusText = 'Musiqalar yuklanmoqda...';
+                  });
+
+                  final homeController = Provider.of<HomeController>(
+                    context,
+                    listen: false,
+                  );
+                  homeController.initialize(); // yoki loadAllMusic()
+                  await homeController.loadAllMusic();
+
+                  if (context.mounted) {
+                    setState(() {
+                      _statusText =
+                          '${homeController.songs.length} ta qo\'shiq topildi';
+                    });
+
+                    await Future.delayed(const Duration(seconds: 1));
+
+                    if (context.mounted) {
+                      Navigator.of(context).pushReplacementNamed('/main');
+                    }
+                  }
                 }
               },
               style: TextButton.styleFrom(
