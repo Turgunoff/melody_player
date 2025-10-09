@@ -231,7 +231,7 @@ class AudioPlayerController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
+    // _audioPlayer.dispose();
     super.dispose();
   }
 }

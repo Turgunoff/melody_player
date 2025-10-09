@@ -11,7 +11,10 @@ import 'controllers/permission_controller.dart';
 import 'controllers/audio_player_controller.dart';
 import 'controllers/favorites_controller.dart';
 
+// GLOBAL INSTANCE - Ilova butunlay yopilmaguncha saqlanadi
+final AudioPlayerController _audioPlayerController = AudioPlayerController();
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MelodyPlayerApp());
 }
 
@@ -25,7 +28,8 @@ class MelodyPlayerApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PermissionController()),
         ChangeNotifierProvider(create: (_) => MainController()),
         ChangeNotifierProvider(create: (_) => HomeController()),
-        ChangeNotifierProvider(create: (_) => AudioPlayerController()),
+        // MUHIM: Global instance ishlatish
+        ChangeNotifierProvider.value(value: _audioPlayerController),
         ChangeNotifierProvider(create: (_) => FavoritesController()),
       ],
       child: MaterialApp(
