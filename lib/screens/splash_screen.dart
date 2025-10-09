@@ -78,7 +78,7 @@ class _SplashScreenState extends State<SplashScreen>
           context,
           listen: false,
         );
-        homeController.initialize();
+        await homeController.loadAllMusic();
 
         if (mounted) {
           setState(() {
@@ -99,7 +99,9 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.of(context).pushReplacementNamed('/main');
       } else {
         // Dialog bilan permission so'rash
-        _showPermissionDialog(context, permissionController);
+        if (mounted) {
+          _showPermissionDialog(context, permissionController);
+        }
       }
     }
   }
@@ -111,9 +113,10 @@ class _SplashScreenState extends State<SplashScreen>
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
+        // context o'rniga dialogContext
         return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          backgroundColor: Theme.of(dialogContext).colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -149,13 +152,17 @@ class _SplashScreenState extends State<SplashScreen>
           actions: [
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
+                // Avval dialog'ni yoping
+                Navigator.of(dialogContext).pop(); // dialogContext ishlatamiz
+
+                // Permission so'rang
                 final granted = await controller.requestPermission();
-                if (granted) {
+
+                // Context hali active ekanligini tekshiring
+                if (context.mounted && granted) {
+                  // mounted ishlatamiz
+                  // Main screen'ga o'ting
                   Navigator.of(context).pushReplacementNamed('/main');
-                } else {
-                  // Permission rad etildi, ilovani yopish
-                  Navigator.of(context).pop();
                 }
               },
               style: TextButton.styleFrom(
@@ -176,9 +183,8 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                // Ilovani yopish
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop(); // dialogContext ishlatamiz
+                // Ilovani yopish (optional)
               },
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.textSecondaryColor,
