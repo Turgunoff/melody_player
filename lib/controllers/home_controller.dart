@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import '../models/audio_model.dart';
 import '../services/audio_service.dart';
 
@@ -8,16 +9,21 @@ class HomeController extends ChangeNotifier {
   int _selectedTab = 0;
   bool _isLoading = false;
   bool _isRefreshing = false; // Qo'shildi
+  bool _isSearching = false;
+  String _searchQuery = '';
 
   List<AudioModel> _songs = [];
   List<Map<String, dynamic>> _albums = [];
   List<Map<String, dynamic>> _artists = [];
+  List<AudioModel> _filteredSongs = [];
 
   final List<String> tabs = ['Barcha qo\'shiqlar', 'Artistlar', 'Albumlar'];
 
   int get selectedTab => _selectedTab;
   bool get isLoading => _isLoading;
-  List<AudioModel> get songs => _songs;
+  bool get isSearching => _isSearching;
+  String get searchQuery => _searchQuery;
+  List<AudioModel> get songs => _isSearching ? _filteredSongs : _songs;
   List<Map<String, dynamic>> get albums => _albums;
   List<Map<String, dynamic>> get artists => _artists;
 
@@ -133,6 +139,72 @@ class HomeController extends ChangeNotifier {
       print('❌ Yangilashda xatolik: $e');
     } finally {
       _isRefreshing = false;
+    }
+  }
+
+  // Search methods
+  void startSearch() {
+    _isSearching = true;
+    notifyListeners();
+  }
+
+  void stopSearch() {
+    _isSearching = false;
+    _searchQuery = '';
+    _filteredSongs.clear();
+    notifyListeners();
+  }
+
+  void updateSearchQuery(String query) {
+    _searchQuery = query;
+    if (query.isEmpty) {
+      _filteredSongs.clear();
+    } else {
+      _filteredSongs = _songs.where((song) {
+        return song.title.toLowerCase().contains(query.toLowerCase()) ||
+            song.artist.toLowerCase().contains(query.toLowerCase()) ||
+            (song.album ?? '').toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+    notifyListeners();
+  }
+
+  // Duration lazy loading
+  Future<void> updateSongDuration(AudioModel song) async {
+    if (song.duration != null) return; // Agar duration bor bo'lsa, qaytaramiz
+
+    try {
+      final player = AudioPlayer();
+      await player.setFilePath(song.path);
+      final duration = player.duration;
+      await player.dispose();
+
+      if (duration != null) {
+        final newSong = AudioModel(
+          id: song.id,
+          title: song.title,
+          artist: song.artist,
+          album: song.album,
+          path: song.path,
+          duration: duration.inMilliseconds,
+        );
+
+        // Songs ro'yxatida yangilash
+        final index = _songs.indexWhere((s) => s.id == song.id);
+        if (index != -1) {
+          _songs[index] = newSong;
+        }
+
+        // Filtered songs ro'yxatida yangilash
+        final filteredIndex = _filteredSongs.indexWhere((s) => s.id == song.id);
+        if (filteredIndex != -1) {
+          _filteredSongs[filteredIndex] = newSong;
+        }
+
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Duration yangilashda xatolik: $e');
     }
   }
 }

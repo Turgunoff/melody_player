@@ -35,7 +35,6 @@ class MelodyPlayerApp extends StatelessWidget {
         home: const SplashScreen(),
         routes: {
           '/main': (context) => const MainScreen(),
-          // '/now-playing': (context) => const NowPlayingScreen(),
           '/artist-songs': (context) {
             final args =
                 ModalRoute.of(context)!.settings.arguments

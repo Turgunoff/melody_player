@@ -45,7 +45,7 @@ class AudioService {
                     artist: artist,
                     album: path.basename(path.dirname(entity.path)),
                     path: entity.path,
-                    duration: null,
+                    duration: null, // Avval null, keyin yangilanadi
                   ),
                 );
               }
@@ -59,6 +59,10 @@ class AudioService {
       songs.sort(
         (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
       );
+
+      // Duration'larni lazy loading uchun tashlab qo'yamiz
+      // print('Duration\'lar lazy loading orqali yangilanadi');
+
       print('Jami ${songs.length} ta qo\'shiq topildi');
       return songs;
     } catch (e) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import '../controllers/main_controller.dart';
 import '../controllers/audio_player_controller.dart';
@@ -48,19 +49,19 @@ class MainScreen extends StatelessWidget {
               ),
               items: const [
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
+                  icon: Icon(Iconsax.home_2_copy),
+                  activeIcon: Icon(Iconsax.home_2),
                   label: 'Bosh sahifa',
                 ),
 
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite_outline),
-                  activeIcon: Icon(Icons.favorite),
+                  icon: Icon(Iconsax.heart_copy),
+                  activeIcon: Icon(Iconsax.heart),
                   label: 'Sevimlilar',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.settings_outlined),
-                  activeIcon: Icon(Icons.settings),
+                  icon: Icon(Iconsax.setting_2_copy),
+                  activeIcon: Icon(Iconsax.setting_2),
                   label: 'Sozlamalar',
                 ),
               ],

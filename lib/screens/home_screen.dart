@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/audio_player_controller.dart';
@@ -40,108 +41,197 @@ class HomeScreen extends StatelessWidget {
                   titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
                 ),
                 actions: [
-                  IconButton(
-                    onPressed: () {
-                      // Search functionality
+                  Consumer<HomeController>(
+                    builder: (context, homeController, child) {
+                      return IconButton(
+                        onPressed: () {
+                          if (homeController.isSearching) {
+                            homeController.stopSearch();
+                          } else {
+                            homeController.startSearch();
+                          }
+                        },
+                        icon: Icon(
+                          homeController.isSearching
+                              ? Iconsax.close_circle
+                              : Iconsax.search_normal_1_copy,
+                          color: Colors.white,
+                        ),
+                      );
                     },
-                    icon: const Icon(Icons.search, color: Colors.white),
                   ),
-                  IconButton(
-                    onPressed: () {},
 
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                  ),
                   const SizedBox(width: 8),
                 ],
               ),
 
+              // Search Bar
+              Consumer<HomeController>(
+                builder: (context, homeController, child) {
+                  if (!homeController.isSearching) {
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  }
+
+                  return SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: TextField(
+                        autofocus: true,
+                        onChanged: homeController.updateSearchQuery,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Qo\'shiq, artist yoki album qidirish...',
+                          hintStyle: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          prefixIcon: Icon(
+                            Iconsax.search_normal_1_copy,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          suffixIcon: homeController.searchQuery.isNotEmpty
+                              ? IconButton(
+                                  onPressed: () =>
+                                      homeController.updateSearchQuery(''),
+                                  icon: Icon(
+                                    Iconsax.close_circle,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
               // Tab Bar
-              SliverToBoxAdapter(
-                child: Container(
-                  height: 60,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: controller.tabs.length,
-                    itemBuilder: (context, index) {
-                      final isSelected = controller.selectedTab == index;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                // Tab o'zgartirish
-                                controller.changeTab(index);
-                                print(
-                                  '✅ Tab o\'zgartirildi: ${controller.tabs[index]}',
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(25),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: isSelected
-                                      ? AppTheme.primaryGradient
-                                      : null,
-                                  color: isSelected
-                                      ? null
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.surface.withOpacity(0.5),
+              Consumer<HomeController>(
+                builder: (context, homeController, child) {
+                  if (homeController.isSearching) {
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  }
+
+                  return SliverToBoxAdapter(
+                    child: Container(
+                      height: 60,
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: controller.tabs.length,
+                        itemBuilder: (context, index) {
+                          final isSelected = controller.selectedTab == index;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    // Tab o'zgartirish
+                                    controller.changeTab(index);
+                                    print(
+                                      '✅ Tab o\'zgartirildi: ${controller.tabs[index]}',
+                                    );
+                                  },
                                   borderRadius: BorderRadius.circular(25),
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withOpacity(0.3),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    controller.tabs[index],
-                                    style: TextStyle(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: isSelected
+                                          ? AppTheme.primaryGradient
+                                          : null,
                                       color: isSelected
-                                          ? Colors.white
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      fontSize: 15,
+                                          ? null
+                                          : Theme.of(context)
+                                                .colorScheme
+                                                .surface
+                                                .withOpacity(0.5),
+                                      borderRadius: BorderRadius.circular(25),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withOpacity(0.3),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        controller.tabs[index],
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          fontSize: 15,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
 
               // Content
-              SliverToBoxAdapter(
-                child: _buildContent(
-                  controller.selectedTab,
-                  context,
-                  controller,
-                ),
+              Consumer<HomeController>(
+                builder: (context, homeController, child) {
+                  if (homeController.isSearching) {
+                    return SliverToBoxAdapter(
+                      child: _buildSearchResults(context, homeController),
+                    );
+                  }
+
+                  return SliverToBoxAdapter(
+                    child: _buildContent(
+                      controller.selectedTab,
+                      context,
+                      controller,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -195,7 +285,7 @@ class HomeScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.music_note_rounded,
+                  Iconsax.music_copy,
                   size: 50,
                   color: Colors.white,
                 ),
@@ -284,8 +374,8 @@ class HomeScreen extends StatelessWidget {
                       gradient: AppTheme.primaryGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.music_note_rounded,
+                    child: Icon(
+                      Iconsax.music_copy,
                       color: Colors.white,
                       size: 28,
                     ),
@@ -322,15 +412,26 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 // Duration and Menu
-                Text(
-                  song.durationString,
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Consumer<HomeController>(
+                  builder: (context, homeController, child) {
+                    // Lazy loading - duration yo'q bo'lsa, yangilash
+                    if (song.duration == null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        homeController.updateSongDuration(song);
+                      });
+                    }
+
+                    return Text(
+                      song.durationString,
+                      style: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    );
+                  },
                 ),
                 Consumer<FavoritesController>(
                   builder: (context, favoritesController, child) {
@@ -344,23 +445,64 @@ class HomeScreen extends StatelessWidget {
                             : Icons.favorite_border,
                         color: favoritesController.isFavorite(song.id)
                             ? AppTheme.primaryColor
-                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            : Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                       iconSize: 20,
                     );
                   },
                 ),
-                IconButton(
-                  onPressed: () {
-                    // Menu functionality
+                Consumer<AudioPlayerController>(
+                  builder: (context, audioController, child) {
+                    final isCurrentSong =
+                        audioController.currentSong?.id == song.id;
+                    final isPlaying =
+                        isCurrentSong && audioController.isPlaying;
+
+                    return IconButton(
+                      onPressed: () async {
+                        if (isCurrentSong) {
+                          // Agar bu qo'shiq hozir o'ynatilayotgan bo'lsa, play/pause
+                          if (audioController.isPlaying) {
+                            audioController.pause();
+                          } else {
+                            audioController.resume();
+                          }
+                        } else {
+                          // Agar boshqa qo'shiq bo'lsa, yangi qo'shiqni o'ynatish
+                          final homeController = Provider.of<HomeController>(
+                            context,
+                            listen: false,
+                          );
+                          await audioController.playSong(
+                            song,
+                            playlist: homeController.songs,
+                          );
+
+                          if (context.mounted) {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const FullPlayerSheet(),
+                            );
+                          }
+                        }
+                      },
+                      icon: Icon(
+                        isCurrentSong && isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        color: isCurrentSong
+                            ? AppTheme.primaryColor
+                            : Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      iconSize: 20,
+                    );
                   },
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                  iconSize: 20,
                 ),
               ],
             ),
@@ -696,6 +838,107 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchResults(
+    BuildContext context,
+    HomeController homeController,
+  ) {
+    if (homeController.searchQuery.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Icon(
+              Iconsax.search_normal_1_copy,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Qo\'shiq qidirish',
+              style: TextStyle(
+                fontSize: 18,
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Qo\'shiq nomi, artist yoki album nomini kiriting',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (homeController.songs.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Icon(
+              Iconsax.search_normal_1_copy,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Hech narsa topilmadi',
+              style: TextStyle(
+                fontSize: 18,
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '"${homeController.searchQuery}" uchun natija topilmadi',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Text(
+                'Natijalar (${homeController.songs.length})',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: homeController.songs.length,
+          itemBuilder: (context, index) {
+            final song = homeController.songs[index];
+            return _buildSongTile(context, song);
+          },
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import '../controllers/audio_player_controller.dart';
+import '../controllers/favorites_controller.dart';
 import '../utils/app_theme.dart';
 
 class FullPlayerSheet extends StatelessWidget {
@@ -25,8 +27,8 @@ class FullPlayerSheet extends StatelessWidget {
           topRight: Radius.circular(20),
         ),
       ),
-      child: Consumer<AudioPlayerController>(
-        builder: (context, controller, child) {
+      child: Consumer2<AudioPlayerController, FavoritesController>(
+        builder: (context, controller, favoritesController, child) {
           if (controller.currentSong == null) {
             return const Center(
               child: Text(
@@ -39,10 +41,10 @@ class FullPlayerSheet extends StatelessWidget {
           return SafeArea(
             child: Column(
               children: [
-                _buildHeader(context),
+                _buildHeader(context, controller, favoritesController),
                 Expanded(flex: 3, child: _buildAlbumArt(context, controller)),
                 _buildSongInfo(context, controller),
-                _buildLyrics(context, controller),
+                // _buildLyrics(context, controller),
                 _buildProgressBar(context, controller),
                 _buildControls(context, controller),
                 const SizedBox(height: 20),
@@ -54,7 +56,11 @@ class FullPlayerSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(
+    BuildContext context,
+    AudioPlayerController controller,
+    FavoritesController favoritesController,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
       child: Row(
@@ -63,7 +69,7 @@ class FullPlayerSheet extends StatelessWidget {
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(
-              Icons.keyboard_arrow_down,
+              Iconsax.arrow_down_1_copy,
               color: Colors.white,
               size: 32,
             ),
@@ -77,10 +83,21 @@ class FullPlayerSheet extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.favorite_border,
-              color: Colors.white,
+            onPressed: () {
+              if (controller.currentSong != null) {
+                favoritesController.toggleFavorite(controller.currentSong!);
+              }
+            },
+            icon: Icon(
+              controller.currentSong != null &&
+                      favoritesController.isFavorite(controller.currentSong!.id)
+                  ? Iconsax.heart
+                  : Iconsax.heart_copy,
+              color:
+                  controller.currentSong != null &&
+                      favoritesController.isFavorite(controller.currentSong!.id)
+                  ? AppTheme.primaryColor
+                  : Colors.white,
               size: 24,
             ),
           ),
@@ -116,7 +133,7 @@ class FullPlayerSheet extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.music_note,
+                Iconsax.music_copy,
                 size: 120,
                 color: Colors.white,
               ),
@@ -156,48 +173,6 @@ class FullPlayerSheet extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLyrics(BuildContext context, AudioPlayerController controller) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Text(
-            'Whispers in the midnight breeze,',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 16,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Carrying dreams across the seas,',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'I close my eyes, let go, and drift away.',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 16,
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -267,7 +242,7 @@ class FullPlayerSheet extends StatelessWidget {
           IconButton(
             onPressed: controller.toggleShuffle,
             icon: Icon(
-              Icons.shuffle,
+              Iconsax.shuffle,
               color: controller.isShuffled
                   ? AppTheme.primaryColor
                   : Colors.white.withOpacity(0.7),
@@ -277,7 +252,7 @@ class FullPlayerSheet extends StatelessWidget {
           IconButton(
             onPressed: controller.previousSong,
             icon: const Icon(
-              Icons.skip_previous,
+              Iconsax.arrow_left_2_copy,
               color: Colors.white,
               size: 32,
             ),
@@ -305,7 +280,7 @@ class FullPlayerSheet extends StatelessWidget {
                 }
               },
               icon: Icon(
-                controller.isPlaying ? Icons.pause : Icons.play_arrow,
+                controller.isPlaying ? Iconsax.pause : Iconsax.play_copy,
                 color: Colors.white,
                 size: 32,
               ),
@@ -313,12 +288,16 @@ class FullPlayerSheet extends StatelessWidget {
           ),
           IconButton(
             onPressed: controller.nextSong,
-            icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
+            icon: const Icon(
+              Iconsax.arrow_right_3_copy,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
           IconButton(
             onPressed: controller.toggleRepeat,
             icon: Icon(
-              controller.isRepeating ? Icons.repeat : Icons.repeat_outlined,
+              controller.isRepeating ? Iconsax.repeat : Iconsax.repeat,
               color: controller.isRepeating
                   ? AppTheme.primaryColor
                   : Colors.white.withOpacity(0.7),

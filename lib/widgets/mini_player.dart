@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import '../controllers/main_controller.dart';
 import '../controllers/audio_player_controller.dart';
@@ -47,7 +48,7 @@ class MiniPlayer extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
-                      Icons.music_note,
+                      Iconsax.music_copy,
                       color: Colors.white,
                       size: 30,
                     ),
@@ -124,16 +125,23 @@ class MiniPlayer extends StatelessWidget {
                           return IconButton(
                             onPressed: () {
                               if (audioController.currentSong != null) {
-                                favoritesController.toggleFavorite(audioController.currentSong!);
+                                favoritesController.toggleFavorite(
+                                  audioController.currentSong!,
+                                );
                               }
                             },
                             icon: Icon(
                               audioController.currentSong != null &&
-                                      favoritesController.isFavorite(audioController.currentSong!.id)
+                                      favoritesController.isFavorite(
+                                        audioController.currentSong!.id,
+                                      )
                                   ? Icons.favorite
                                   : Icons.favorite_border,
-                              color: audioController.currentSong != null &&
-                                      favoritesController.isFavorite(audioController.currentSong!.id)
+                              color:
+                                  audioController.currentSong != null &&
+                                      favoritesController.isFavorite(
+                                        audioController.currentSong!.id,
+                                      )
                                   ? AppTheme.primaryColor
                                   : null,
                             ),

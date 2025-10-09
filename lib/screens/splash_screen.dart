@@ -146,7 +146,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(width: 12),
               const Text(
-                'Permission Kerak',
+                'Ruxsat Kerak',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: AppTheme.primaryColor,

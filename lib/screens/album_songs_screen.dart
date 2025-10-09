@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/audio_player_controller.dart';
@@ -75,7 +76,7 @@ class AlbumSongsScreen extends StatelessWidget {
                           gradient: AppTheme.primaryGradient,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.album_rounded,
                           size: 50,
                           color: Colors.white,
@@ -158,8 +159,8 @@ class AlbumSongsScreen extends StatelessWidget {
                       gradient: AppTheme.primaryGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.music_note_rounded,
+                    child: Icon(
+                      Iconsax.music_copy,
                       color: Colors.white,
                       size: 28,
                     ),
@@ -196,15 +197,26 @@ class AlbumSongsScreen extends StatelessWidget {
                   ),
                 ),
                 // Duration and Menu
-                Text(
-                  song.durationString,
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Consumer<HomeController>(
+                  builder: (context, homeController, child) {
+                    // Lazy loading - duration yo'q bo'lsa, yangilash
+                    if (song.duration == null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        homeController.updateSongDuration(song);
+                      });
+                    }
+
+                    return Text(
+                      song.durationString,
+                      style: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    );
+                  },
                 ),
                 Consumer<FavoritesController>(
                   builder: (context, favoritesController, child) {
@@ -226,17 +238,52 @@ class AlbumSongsScreen extends StatelessWidget {
                     );
                   },
                 ),
-                IconButton(
-                  onPressed: () {
-                    // Menu functionality
+                Consumer<AudioPlayerController>(
+                  builder: (context, audioController, child) {
+                    final isCurrentSong =
+                        audioController.currentSong?.id == song.id;
+                    final isPlaying =
+                        isCurrentSong && audioController.isPlaying;
+
+                    return IconButton(
+                      onPressed: () async {
+                        if (isCurrentSong) {
+                          // Agar bu qo'shiq hozir o'ynatilayotgan bo'lsa, play/pause
+                          if (audioController.isPlaying) {
+                            audioController.pause();
+                          } else {
+                            audioController.resume();
+                          }
+                        } else {
+                          // Agar boshqa qo'shiq bo'lsa, yangi qo'shiqni o'ynatish
+                          await audioController.playSong(
+                            song,
+                            playlist: playlist,
+                          );
+
+                          if (context.mounted) {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const FullPlayerSheet(),
+                            );
+                          }
+                        }
+                      },
+                      icon: Icon(
+                        isCurrentSong && isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        color: isCurrentSong
+                            ? AppTheme.primaryColor
+                            : Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      iconSize: 20,
+                    );
                   },
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                  iconSize: 20,
                 ),
               ],
             ),
