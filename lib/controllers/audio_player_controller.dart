@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/audio_model.dart';
 
 class AudioPlayerController extends ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final Random _random = Random(); // QO'SHISH
 
   AudioModel? _currentSong;
   List<AudioModel> _playlist = [];
@@ -14,6 +17,9 @@ class AudioPlayerController extends ChangeNotifier {
   bool _isLoading = false;
   bool _isShuffled = false;
   bool _isRepeating = false;
+
+  List<int> _shuffledIndices = []; // QO'SHISH: Shuffle tartib
+  int _shufflePosition = 0; // QO'SHISH: Shuffle pozitsiya
 
   // Getters
   AudioModel? get currentSong => _currentSong;
@@ -26,9 +32,12 @@ class AudioPlayerController extends ChangeNotifier {
   bool get isShuffled => _isShuffled;
   bool get isRepeating => _isRepeating;
 
-  double get progress => _duration.inMilliseconds > 0
-      ? _position.inMilliseconds / _duration.inMilliseconds
-      : 0.0;
+  // TUZATISH: Progress qiymatini cheklash
+  double get progress {
+    if (_duration.inMilliseconds <= 0) return 0.0;
+    final value = _position.inMilliseconds / _duration.inMilliseconds;
+    return value.clamp(0.0, 1.0);
+  }
 
   AudioPlayerController() {
     _initAudioPlayer();
@@ -48,8 +57,25 @@ class AudioPlayerController extends ChangeNotifier {
     _audioPlayer.playerStateStream.listen((playerState) {
       _isPlaying = playerState.playing;
       _isLoading = playerState.processingState == ProcessingState.loading;
+
+      if (playerState.processingState == ProcessingState.completed) {
+        _onSongCompleted();
+      }
+
       notifyListeners();
     });
+  }
+
+  Future<void> _onSongCompleted() async {
+    print('✅ Qo\'shiq tugadi');
+
+    if (_isRepeating) {
+      await _audioPlayer.seek(Duration.zero);
+      await _audioPlayer.play();
+      print('🔁 Qayta o\'ynatilmoqda');
+    } else {
+      await nextSong();
+    }
   }
 
   Future<void> playSong(AudioModel song, {List<AudioModel>? playlist}) async {
@@ -58,11 +84,15 @@ class AudioPlayerController extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // Playlist qo'shish
       if (playlist != null) {
         _playlist = playlist;
         _currentIndex = playlist.indexWhere((s) => s.id == song.id);
         if (_currentIndex == -1) _currentIndex = 0;
+
+        // Shuffle list yaratish
+        if (_isShuffled) {
+          _createShuffleList();
+        }
       }
 
       await _audioPlayer.setFilePath(song.path);
@@ -74,6 +104,22 @@ class AudioPlayerController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // YANGI: Shuffle list yaratish
+  void _createShuffleList() {
+    _shuffledIndices = List.generate(_playlist.length, (index) => index);
+    _shuffledIndices.shuffle(_random);
+
+    // Hozirgi qo'shiqni birinchi o'ringa qo'yish
+    final currentPos = _shuffledIndices.indexOf(_currentIndex);
+    if (currentPos != -1) {
+      _shuffledIndices.removeAt(currentPos);
+      _shuffledIndices.insert(0, _currentIndex);
+    }
+
+    _shufflePosition = 0;
+    print('🔀 Shuffle list yaratildi: ${_shuffledIndices.length} ta qo\'shiq');
   }
 
   Future<void> pause() async {
@@ -101,11 +147,19 @@ class AudioPlayerController extends ChangeNotifier {
     }
 
     if (_isShuffled) {
-      // Random song
-      final random = DateTime.now().millisecondsSinceEpoch % _playlist.length;
-      _currentIndex = random;
+      // Shuffle rejimida keyingi qo'shiq
+      _shufflePosition++;
+
+      // Agar oxirigacha yetgan bo'lsa, qaytadan aralashtirish
+      if (_shufflePosition >= _shuffledIndices.length) {
+        _createShuffleList();
+        _shufflePosition = 1; // 0 hozirgi qo'shiq
+      }
+
+      _currentIndex = _shuffledIndices[_shufflePosition];
+      print('🔀 Shuffle: ${_shufflePosition}/${_shuffledIndices.length}');
     } else {
-      // Keyingi qo'shiq
+      // Oddiy rejimda ketma-ket
       _currentIndex = (_currentIndex + 1) % _playlist.length;
     }
 
@@ -119,12 +173,26 @@ class AudioPlayerController extends ChangeNotifier {
       return;
     }
 
+    // Agar qo'shiq 3 sekunddan ko'proq o'ynagan bo'lsa, boshidan boshlash
+    if (_position.inSeconds > 3) {
+      await seekTo(Duration.zero);
+      print('🔄 Qo\'shiq boshidan boshlandi');
+      return;
+    }
+
     if (_isShuffled) {
-      // Random song
-      final random = DateTime.now().millisecondsSinceEpoch % _playlist.length;
-      _currentIndex = random;
+      // Shuffle rejimida oldingi qo'shiq
+      _shufflePosition--;
+
+      // Agar boshiga yetgan bo'lsa
+      if (_shufflePosition < 0) {
+        _shufflePosition = _shuffledIndices.length - 1;
+      }
+
+      _currentIndex = _shuffledIndices[_shufflePosition];
+      print('🔀 Shuffle: ${_shufflePosition}/${_shuffledIndices.length}');
     } else {
-      // Oldingi qo'shiq
+      // Oddiy rejimda
       _currentIndex = (_currentIndex - 1 + _playlist.length) % _playlist.length;
     }
 
@@ -141,6 +209,16 @@ class AudioPlayerController extends ChangeNotifier {
 
   void toggleShuffle() {
     _isShuffled = !_isShuffled;
+
+    if (_isShuffled) {
+      // Shuffle yoqilganda list yaratish
+      _createShuffleList();
+    } else {
+      // Shuffle o'chirilganda tozalash
+      _shuffledIndices.clear();
+      _shufflePosition = 0;
+    }
+
     notifyListeners();
     print('🔀 Shuffle: ${_isShuffled ? "ON" : "OFF"}');
   }

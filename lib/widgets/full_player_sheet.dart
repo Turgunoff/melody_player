@@ -3,13 +3,28 @@ import 'package:provider/provider.dart';
 import '../controllers/audio_player_controller.dart';
 import '../utils/app_theme.dart';
 
-class NowPlayingScreen extends StatelessWidget {
-  const NowPlayingScreen({super.key});
+class FullPlayerSheet extends StatelessWidget {
+  const FullPlayerSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
+      height: MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppTheme.primaryColor.withOpacity(0.3),
+            Colors.black,
+            Colors.black,
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
       child: Consumer<AudioPlayerController>(
         builder: (context, controller, child) {
           if (controller.currentSong == null) {
@@ -21,42 +36,17 @@ class NowPlayingScreen extends StatelessWidget {
             );
           }
 
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppTheme.primaryColor.withOpacity(0.3),
-                  Colors.black,
-                  Colors.black,
-                ],
-              ),
-            ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // Header
-                  _buildHeader(context),
-
-                  // Album Art
-                  Expanded(flex: 3, child: _buildAlbumArt(context, controller)),
-
-                  // Song Info
-                  _buildSongInfo(context, controller),
-
-                  // Lyrics
-                  _buildLyrics(context, controller),
-
-                  // Progress Bar
-                  _buildProgressBar(context, controller),
-
-                  // Controls
-                  _buildControls(context, controller),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
+          return SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(context),
+                Expanded(flex: 3, child: _buildAlbumArt(context, controller)),
+                _buildSongInfo(context, controller),
+                _buildLyrics(context, controller),
+                _buildProgressBar(context, controller),
+                _buildControls(context, controller),
+                const SizedBox(height: 20),
+              ],
             ),
           );
         },
@@ -66,7 +56,7 @@ class NowPlayingScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -87,9 +77,7 @@ class NowPlayingScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () {
-              // TODO: Add to favorites
-            },
+            onPressed: () {},
             icon: const Icon(
               Icons.favorite_border,
               color: Colors.white,
@@ -233,7 +221,7 @@ class NowPlayingScreen extends StatelessWidget {
               trackHeight: 4,
             ),
             child: Slider(
-              value: controller.progress,
+              value: controller.progress.clamp(0.0, 1.0), // Qo'shimcha himoya
               onChanged: (value) {
                 final position = Duration(
                   milliseconds: (value * controller.duration.inMilliseconds)
@@ -276,7 +264,6 @@ class NowPlayingScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Shuffle
           IconButton(
             onPressed: controller.toggleShuffle,
             icon: Icon(
@@ -287,8 +274,6 @@ class NowPlayingScreen extends StatelessWidget {
               size: 24,
             ),
           ),
-
-          // Previous
           IconButton(
             onPressed: controller.previousSong,
             icon: const Icon(
@@ -297,8 +282,6 @@ class NowPlayingScreen extends StatelessWidget {
               size: 32,
             ),
           ),
-
-          // Play/Pause
           Container(
             width: 70,
             height: 70,
@@ -328,14 +311,10 @@ class NowPlayingScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Next
           IconButton(
             onPressed: controller.nextSong,
             icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
           ),
-
-          // Repeat
           IconButton(
             onPressed: controller.toggleRepeat,
             icon: Icon(

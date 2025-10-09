@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../controllers/main_controller.dart';
 import '../controllers/audio_player_controller.dart';
 import '../utils/app_theme.dart';
+import 'full_player_sheet.dart';
 
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
@@ -13,7 +14,12 @@ class MiniPlayer extends StatelessWidget {
       builder: (context, mainController, audioController, child) {
         return GestureDetector(
           onTap: () {
-            Navigator.of(context).pushNamed('/now-playing');
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const FullPlayerSheet(),
+            );
           },
           child: Container(
             height: 80,

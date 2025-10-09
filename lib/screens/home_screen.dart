@@ -46,14 +46,7 @@ class HomeScreen extends StatelessWidget {
                     icon: const Icon(Icons.search, color: Colors.white),
                   ),
                   IconButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const NowPlayingScreen(),
-                      );
-                    },
+                    onPressed: () {},
 
                     icon: const Icon(Icons.more_vert, color: Colors.white),
                   ),
@@ -264,8 +257,15 @@ class HomeScreen extends StatelessWidget {
               song,
               playlist: homeController.songs,
             );
+
+            // Bottom sheet ochish
             if (context.mounted) {
-              Navigator.of(context).pushNamed('/now-playing');
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const FullPlayerSheet(),
+              );
             }
           },
           borderRadius: BorderRadius.circular(16),
