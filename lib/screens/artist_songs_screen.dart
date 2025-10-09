@@ -35,59 +35,59 @@ class ArtistSongsScreen extends StatelessWidget {
               ),
             ],
           ),
-      body: Consumer<HomeController>(
-        builder: (context, controller, child) {
-          // Artist qo'shiqlarini filtrlash
-          final artistSongs = controller.songs
-              .where((song) => song.artist == artistName)
-              .toList();
+          body: Consumer<HomeController>(
+            builder: (context, controller, child) {
+              // Artist qo'shiqlarini filtrlash
+              final artistSongs = controller.songs
+                  .where((song) => song.artist == artistName)
+                  .toList();
 
-          if (artistSongs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      size: 50,
-                      color: Colors.white,
-                    ),
+              if (artistSongs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          size: 50,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Artist qo\'shiqlari topilmadi',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Artist qo\'shiqlari topilmadi',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
+                );
+              }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: artistSongs.length,
-            itemBuilder: (context, index) {
-              final song = artistSongs[index];
-              return _buildSongTile(context, song, artistSongs);
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: artistSongs.length,
+                itemBuilder: (context, index) {
+                  final song = artistSongs[index];
+                  return _buildSongTile(context, song, artistSongs);
+                },
+              );
             },
-          );
-        },
-      ),
-      // Mini player
-      bottomSheet: audioController.currentSong != null
-          ? const MiniPlayer()
-          : null,
-    );
+          ),
+          // Mini player
+          bottomSheet: audioController.currentSong != null
+              ? const MiniPlayer()
+              : null,
+        );
       },
     );
   }

@@ -32,69 +32,69 @@ class FavoritesScreen extends StatelessWidget {
               ),
             ],
           ),
-      body: Consumer<FavoritesController>(
-        builder: (context, favoritesController, child) {
-          if (favoritesController.favoriteSongs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.favorite,
-                      size: 50,
-                      color: Colors.white,
-                    ),
+          body: Consumer<FavoritesController>(
+            builder: (context, favoritesController, child) {
+              if (favoritesController.favoriteSongs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.favorite,
+                          size: 50,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Sevimli qo\'shiqlar yo\'q',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Qo\'shiqlarni sevimlilarga qo\'shing',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Sevimli qo\'shiqlar yo\'q',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Qo\'shiqlarni sevimlilarga qo\'shing',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }
+                );
+              }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: favoritesController.favoriteSongs.length,
-            itemBuilder: (context, index) {
-              final song = favoritesController.favoriteSongs[index];
-              return _buildSongTile(
-                context,
-                song,
-                favoritesController.favoriteSongs,
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: favoritesController.favoriteSongs.length,
+                itemBuilder: (context, index) {
+                  final song = favoritesController.favoriteSongs[index];
+                  return _buildSongTile(
+                    context,
+                    song,
+                    favoritesController.favoriteSongs,
+                  );
+                },
               );
             },
-          );
-        },
-      ),
-      // Mini player
-      bottomSheet: audioController.currentSong != null
-          ? const MiniPlayer()
-          : null,
-    );
+          ),
+          // Mini player
+          bottomSheet: audioController.currentSong != null
+              ? const MiniPlayer()
+              : null,
+        );
       },
     );
   }
