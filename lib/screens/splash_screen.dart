@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/permission_controller.dart';
 import '../controllers/home_controller.dart';
+import '../controllers/favorites_controller.dart';
 import '../utils/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -79,6 +80,14 @@ class _SplashScreenState extends State<SplashScreen>
           listen: false,
         );
         await homeController.loadAllMusic();
+
+        // Favorites controller'ni initialize qilish
+        final favoritesController = Provider.of<FavoritesController>(
+          context,
+          listen: false,
+        );
+        await favoritesController.loadFavorites();
+        favoritesController.updateFavoriteSongs(homeController.songs);
 
         if (mounted) {
           setState(() {

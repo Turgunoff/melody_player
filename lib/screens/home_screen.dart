@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/audio_player_controller.dart';
+import '../controllers/favorites_controller.dart';
 import '../models/audio_model.dart';
 import '../utils/app_theme.dart';
 import '../widgets/full_player_sheet.dart';
@@ -331,6 +332,24 @@ class HomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                Consumer<FavoritesController>(
+                  builder: (context, favoritesController, child) {
+                    return IconButton(
+                      onPressed: () {
+                        favoritesController.toggleFavorite(song);
+                      },
+                      icon: Icon(
+                        favoritesController.isFavorite(song.id)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: favoritesController.isFavorite(song.id)
+                            ? AppTheme.primaryColor
+                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      iconSize: 20,
+                    );
+                  },
+                ),
                 IconButton(
                   onPressed: () {
                     // Menu functionality
@@ -421,7 +440,10 @@ class HomeScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Open artist
+            // Open artist songs
+            Navigator.of(
+              context,
+            ).pushNamed('/artist-songs', arguments: {'artistName': name});
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
@@ -560,7 +582,11 @@ class HomeScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Open album
+            // Open album songs
+            Navigator.of(context).pushNamed(
+              '/album-songs',
+              arguments: {'albumName': title, 'artistName': artist},
+            );
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(

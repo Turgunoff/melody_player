@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../controllers/favorites_controller.dart';
+import '../controllers/home_controller.dart';
 import '../controllers/audio_player_controller.dart';
+import '../controllers/favorites_controller.dart';
 import '../models/audio_model.dart';
 import '../utils/app_theme.dart';
 import '../widgets/full_player_sheet.dart';
 import '../widgets/mini_player.dart';
 
-class FavoritesScreen extends StatelessWidget {
-  const FavoritesScreen({super.key});
+class ArtistSongsScreen extends StatelessWidget {
+  final String artistName;
+
+  const ArtistSongsScreen({super.key, required this.artistName});
 
   @override
   Widget build(BuildContext context) {
@@ -17,24 +20,29 @@ class FavoritesScreen extends StatelessWidget {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.background,
           appBar: AppBar(
-            title: const Text('Sevimlilar'),
+            title: Text(artistName),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            elevation: 0,
             actions: [
-              Consumer<FavoritesController>(
-                builder: (context, favoritesController, child) {
-                  return IconButton(
-                    onPressed: () {
-                      _showClearFavoritesDialog(context, favoritesController);
-                    },
-                    icon: const Icon(Icons.clear_all),
-                    tooltip: 'Barcha sevimlilarni tozalash',
-                  );
+              IconButton(
+                onPressed: () {
+                  // Play all songs
+                  _playAllSongs(context);
                 },
+                icon: const Icon(Icons.play_arrow),
+                tooltip: 'Barcha qo\'shiqlarni o\'ynatish',
               ),
             ],
           ),
-      body: Consumer<FavoritesController>(
-        builder: (context, favoritesController, child) {
-          if (favoritesController.favoriteSongs.isEmpty) {
+      body: Consumer<HomeController>(
+        builder: (context, controller, child) {
+          // Artist qo'shiqlarini filtrlash
+          final artistSongs = controller.songs
+              .where((song) => song.artist == artistName)
+              .toList();
+
+          if (artistSongs.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -47,29 +55,18 @@ class FavoritesScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.favorite,
+                      Icons.person_rounded,
                       size: 50,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Sevimli qo\'shiqlar yo\'q',
+                    'Artist qo\'shiqlari topilmadi',
                     style: TextStyle(
                       fontSize: 18,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Qo\'shiqlarni sevimlilarga qo\'shing',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -78,14 +75,10 @@ class FavoritesScreen extends StatelessWidget {
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: favoritesController.favoriteSongs.length,
+            itemCount: artistSongs.length,
             itemBuilder: (context, index) {
-              final song = favoritesController.favoriteSongs[index];
-              return _buildSongTile(
-                context,
-                song,
-                favoritesController.favoriteSongs,
-              );
+              final song = artistSongs[index];
+              return _buildSongTile(context, song, artistSongs);
             },
           );
         },
@@ -168,7 +161,7 @@ class FavoritesScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        song.artist,
+                        song.album ?? 'Noma\'lum album',
                         style: TextStyle(
                           color: Theme.of(
                             context,
@@ -198,9 +191,15 @@ class FavoritesScreen extends StatelessWidget {
                       onPressed: () {
                         favoritesController.toggleFavorite(song);
                       },
-                      icon: const Icon(
-                        Icons.favorite,
-                        color: AppTheme.primaryColor,
+                      icon: Icon(
+                        favoritesController.isFavorite(song.id)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: favoritesController.isFavorite(song.id)
+                            ? AppTheme.primaryColor
+                            : Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                       iconSize: 20,
                     );
@@ -226,72 +225,25 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  void _showClearFavoritesDialog(
-    BuildContext context,
-    FavoritesController controller,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.clear_all, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Sevimlilarni Tozalash',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-          ],
-        ),
-        content: const Text(
-          'Barcha sevimli qo\'shiqlarni olib tashlashni xohlaysizmi?',
-          style: TextStyle(color: AppTheme.textSecondaryColor, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.textSecondaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Bekor qilish'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              controller.clearAllFavorites();
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Tozalash',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+  void _playAllSongs(BuildContext context) {
+    final homeController = Provider.of<HomeController>(context, listen: false);
+    final audioController = Provider.of<AudioPlayerController>(
+      context,
+      listen: false,
     );
+
+    final artistSongs = homeController.songs
+        .where((song) => song.artist == artistName)
+        .toList();
+
+    if (artistSongs.isNotEmpty) {
+      audioController.playSong(artistSongs.first, playlist: artistSongs);
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => const FullPlayerSheet(),
+      );
+    }
   }
 }

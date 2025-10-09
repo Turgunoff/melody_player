@@ -13,12 +13,7 @@ class HomeController extends ChangeNotifier {
   List<Map<String, dynamic>> _albums = [];
   List<Map<String, dynamic>> _artists = [];
 
-  final List<String> tabs = [
-    'Barcha qo\'shiqlar',
-    'Artistlar',
-    'Albumlar',
-    'Pleylistlar',
-  ];
+  final List<String> tabs = ['Barcha qo\'shiqlar', 'Artistlar', 'Albumlar'];
 
   int get selectedTab => _selectedTab;
   bool get isLoading => _isLoading;

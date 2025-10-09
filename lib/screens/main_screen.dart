@@ -4,7 +4,6 @@ import '../controllers/main_controller.dart';
 import '../controllers/audio_player_controller.dart';
 import '../widgets/mini_player.dart';
 import 'home_screen.dart';
-import 'library_screen.dart';
 import 'favorites_screen.dart';
 import 'settings_screen.dart';
 
@@ -18,12 +17,7 @@ class MainScreen extends StatelessWidget {
         return Scaffold(
           body: IndexedStack(
             index: mainController.currentIndex,
-            children: const [
-              HomeScreen(),
-              LibraryScreen(),
-              FavoritesScreen(),
-              SettingsScreen(),
-            ],
+            children: const [HomeScreen(), FavoritesScreen(), SettingsScreen()],
           ),
           bottomNavigationBar: Container(
             decoration: const BoxDecoration(
@@ -58,11 +52,7 @@ class MainScreen extends StatelessWidget {
                   activeIcon: Icon(Icons.home),
                   label: 'Bosh sahifa',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.library_music_outlined),
-                  activeIcon: Icon(Icons.library_music),
-                  label: 'Kutubxona',
-                ),
+
                 BottomNavigationBarItem(
                   icon: Icon(Icons.favorite_outline),
                   activeIcon: Icon(Icons.favorite),

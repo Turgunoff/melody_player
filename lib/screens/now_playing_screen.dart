@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/audio_player_controller.dart';
+import '../controllers/favorites_controller.dart';
 import '../utils/app_theme.dart';
 
 class NowPlayingScreen extends StatelessWidget {
@@ -10,8 +11,8 @@ class NowPlayingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Consumer<AudioPlayerController>(
-        builder: (context, controller, child) {
+      body: Consumer2<AudioPlayerController, FavoritesController>(
+        builder: (context, controller, favoritesController, child) {
           if (controller.currentSong == null) {
             return const Center(
               child: Text(
@@ -37,7 +38,7 @@ class NowPlayingScreen extends StatelessWidget {
               child: Column(
                 children: [
                   // Header
-                  _buildHeader(context),
+                  _buildHeader(context, controller, favoritesController),
 
                   // Album Art
                   Expanded(flex: 3, child: _buildAlbumArt(context, controller)),
@@ -64,7 +65,11 @@ class NowPlayingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(
+    BuildContext context,
+    AudioPlayerController controller,
+    FavoritesController favoritesController,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
@@ -88,11 +93,20 @@ class NowPlayingScreen extends StatelessWidget {
           ),
           IconButton(
             onPressed: () {
-              // TODO: Add to favorites
+              if (controller.currentSong != null) {
+                favoritesController.toggleFavorite(controller.currentSong!);
+              }
             },
-            icon: const Icon(
-              Icons.favorite_border,
-              color: Colors.white,
+            icon: Icon(
+              controller.currentSong != null &&
+                      favoritesController.isFavorite(controller.currentSong!.id)
+                  ? Icons.favorite
+                  : Icons.favorite_border,
+              color:
+                  controller.currentSong != null &&
+                      favoritesController.isFavorite(controller.currentSong!.id)
+                  ? AppTheme.primaryColor
+                  : Colors.white,
               size: 24,
             ),
           ),

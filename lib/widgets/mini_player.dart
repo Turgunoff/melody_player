@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/main_controller.dart';
 import '../controllers/audio_player_controller.dart';
+import '../controllers/favorites_controller.dart';
 import '../utils/app_theme.dart';
 import 'full_player_sheet.dart';
 
@@ -118,12 +119,27 @@ class MiniPlayer extends StatelessWidget {
                         icon: const Icon(Icons.skip_next),
                         iconSize: 28,
                       ),
-                      IconButton(
-                        onPressed: () {
-                          // Like/Unlike
+                      Consumer<FavoritesController>(
+                        builder: (context, favoritesController, child) {
+                          return IconButton(
+                            onPressed: () {
+                              if (audioController.currentSong != null) {
+                                favoritesController.toggleFavorite(audioController.currentSong!);
+                              }
+                            },
+                            icon: Icon(
+                              audioController.currentSong != null &&
+                                      favoritesController.isFavorite(audioController.currentSong!.id)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: audioController.currentSong != null &&
+                                      favoritesController.isFavorite(audioController.currentSong!.id)
+                                  ? AppTheme.primaryColor
+                                  : null,
+                            ),
+                            iconSize: 24,
+                          );
                         },
-                        icon: const Icon(Icons.favorite_border),
-                        iconSize: 24,
                       ),
                     ],
                   ),
